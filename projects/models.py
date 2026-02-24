@@ -8,6 +8,8 @@ class Project(models.Model):
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     update_at = models.DateTimeField(auto_now=True)
+    boq_result = models.JSONField(null=True, blank=True)
+    boq_generated_at = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         # If this is a new project (no pk yet) and request user is available

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} - CivilForge{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">{{ project.name }}</h4>
+                    <span class="badge bg-light text-primary">Owner: {{ project.owner.username }}</span>
+                </div>
+
+                <div class="card-body">
+                    <h5 class="mb-3">Project Description</h5>
+                    <p class="lead text-muted">{{ project.description|linebreaks|default:"No description provided." }}</p>
+
+                    <hr class="my-4">
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Created:</strong> {{ project.created_at|date:"d M Y, H:i" }}</p>
+                            <p><strong>Last Updated:</strong> {{ project.updated_at|date:"d M Y, H:i" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Owner:</strong> {{ project.owner.username }}</p>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5 class="mb-3">Bill of Quantities (BOQ) Analysis</h5>
+
+                    <button id="analyze-boq-btn" class="btn btn-primary btn-lg mb-3">
+                        <i class="bi bi-robot"></i> Generate BOQ with AI
+                    </button>
+
+                    <div id="boq-loading" class="d-none text-center my-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Analyzing project description... This may take a moment.</p>
+                    </div>
+
+                    <div id="boq-result" class="d-none mt-4">
+                        <div class="alert alert-success" role="alert">
+                            <h6 class="alert-heading">BOQ Generated</h6>
+                            <pre id="boq-output" class="bg-light p-3 rounded mb-0" style="white-space: pre-wrap;"></pre>
+                        </div>
+                    </div>
+
+                    <div id="boq-error" class="d-none alert alert-danger mt-4" role="alert">
+                        <h6 class="alert-heading">Analysis Failed</h6>
+                        <p id="error-message"></p>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-light text-end">
+                    <a href="{% url 'projects:my_projects' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to My Projects
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+
+<script>
+    const analyzeBtn = document.getElementById('analyze-boq-btn');
+    const loadingDiv = document.getElementById('boq-loading');
+    const resultDiv = document.getElementById('boq-result');
+    const errorDiv = document.getElementById('boq-error');
+    const outputPre = document.getElementById('boq-output');
+    const errorMsg = document.getElementById('error-message');
+
+    analyzeBtn.addEventListener('click', async () => {
+        analyzeBtn.disabled = true;
+        loadingDiv.classList.remove('d-none');
+        resultDiv.classList.add('d-none');
+        errorDiv.classList.add('d-none');
+
+        try {
+            const response = await fetch("{% url 'projects:analyze_boq' project.pk %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            loadingDiv.classList.add('d-none');
+
+            if (data.success) {
+                resultDiv.classList.remove('d-none');
+                let html = '<table class="table table-bordered mt-3"><thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Rate (₦)</th><th>Total (₦)</th></tr></thead><tbody>';
+                data.boq.items.forEach(item => {
+                    html += `<tr><td>${item.item}</td><td>${item.quantity}</td><td>${item.unit}</td><td>${item.unit_rate_naira.toLocaleString()}</td><td>${item.total_naira.toLocaleString()}</td></tr>`;
+                });
+                html += '</tbody></table>';
+                html += `<p><strong>Grand Total:</strong> ₦${data.boq.grand_total_naira.toLocaleString()}</p>`;
+                html += `<p><strong>Contingency:</strong> ${data.boq.contingency_percent}%</p>`;
+                html += '<p><strong>Risks:</strong><ul>';
+                data.boq.risks.forEach(r => html += `<li>${r}</li>`);
+                html += '</ul></p>';
+                html += `<p><strong>Confidence:</strong> ${data.boq.confidence * 100}%</p>`;
+                outputPre.innerHTML = html;
+            } else {
+                errorDiv.classList.remove('d-none');
+                errorMsg.textContent = data.error;
+            }
+        } catch (err) {
+            loadingDiv.classList.add('d-none');
+            errorDiv.classList.remove('d-none');
+            errorMsg.textContent = 'Network error: ' + err.message;
+        } finally {
+            analyzeBtn.disabled = false;
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,12 +1,30 @@
+"""
+civilforge/urls.py  — the master URL file.
+
+Think of URLs like a post office sorting system.
+A request comes in → Django reads the URL → routes it to the right view.
+
+CONCEPT: include()
+  Instead of listing every URL in one giant file, we split them across apps.
+  include('projects.urls') means "go look in projects/urls.py for the rest".
+"""
+
 from django.contrib import admin
 from django.urls import path, include
-from django.contrib.auth import views as auth_views   # ← new import
 
 urlpatterns = [
+    # Django admin panel — keep this, it's useful for managing data
     path('admin/', admin.site.urls),
+
+    # allauth handles ALL auth URLs:
+    # /accounts/login/         — sign in
+    # /accounts/logout/        — sign out
+    # /accounts/signup/        — register
+    # /accounts/email/         — manage email addresses
+    # /accounts/password/...   — change/reset password
+    # /accounts/confirm-email/ — verify email after registration
+    path('accounts/', include('allauth.urls')),
+
+    # Our projects app
     path('my-projects/', include('projects.urls', namespace='projects')),
-    # path('accounts/login/', auth_views.LoginView.as_view(), name='login'),
-    # path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
-    path('accounts/login/', auth_views.LoginView.as_view(template_name='projects/login.html'), name='login'),
-    path('accounts/logout/', auth_views.LogoutView.as_view(next_page='/my-projects/'), name='logout'),
 ]

@@ -1,0 +1,95 @@
+{% comment %}
+Partial template: renders a BOQ result dict.
+Usage: {% include "projects/_boq_table.html" with boq=project.boq_result %}
+{% endcomment %}
+
+<div class="table-responsive mb-3">
+    <table class="table boq-table align-middle mb-0">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th class="text-end">Qty</th>
+                <th>Unit</th>
+                <th class="text-end">Rate (₦)</th>
+                <th class="text-end">Total (₦)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in boq.items %}
+            <tr>
+                <td>{{ item.item }}</td>
+                <td class="text-end">{{ item.quantity }}</td>
+                <td>{{ item.unit }}</td>
+                <td class="text-end">₦{{ item.unit_rate_naira|floatformat:2 }}</td>
+                <td class="text-end fw-semibold">₦{{ item.total_naira|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="table-light">
+                <td colspan="4" class="text-end fw-semibold">Subtotal</td>
+                <td class="text-end fw-semibold">₦{{ boq.grand_total_naira|floatformat:2 }}</td>
+            </tr>
+            <tr class="table-light text-muted">
+                <td colspan="4" class="text-end">Contingency ({{ boq.contingency_percent }}%)</td>
+                <td class="text-end">
+                    {# contingency amount computed inline #}
+                    ₦{% widthratio boq.grand_total_naira 100 boq.contingency_percent %}
+                </td>
+            </tr>
+            <tr class="boq-total-row">
+                <td colspan="4" class="text-end fs-6">TOTAL (incl. contingency)</td>
+                <td class="text-end fs-6">
+                    {# grand_total + contingency — use JS for precision; fallback shown here #}
+                    <span id="boq-final-total">—</span>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<div class="row g-3 mt-1">
+    <div class="col-md-6">
+        <div class="info-chip h-100">
+            <div class="fw-semibold mb-2">
+                <i class="bi bi-bar-chart-line me-1" style="color:var(--cf-accent)"></i>Confidence
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                {% with pct=boq.confidence|floatformat:0 %}
+                <div class="flex-grow-1 bg-light confidence-bar overflow-hidden">
+                    <div class="{% if boq.confidence >= 0.7 %}bg-success{% elif boq.confidence >= 0.4 %}bg-warning{% else %}bg-danger{% endif %} confidence-bar"
+                         style="width:{% widthratio boq.confidence 1 100 %}%"></div>
+                </div>
+                <span class="fw-bold">{% widthratio boq.confidence 1 100 %}%</span>
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="info-chip h-100">
+            <div class="fw-semibold mb-2">
+                <i class="bi bi-shield-exclamation me-1 text-warning"></i>Risk Factors
+            </div>
+            {% if boq.risks %}
+                {% for risk in boq.risks %}
+                <span class="risk-badge"><i class="bi bi-exclamation-circle me-1"></i>{{ risk }}</span>
+                {% endfor %}
+            {% else %}
+                <span class="text-muted small">None identified</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    // Compute precise final total in JS to avoid Django template integer truncation
+    var grand = {{ boq.grand_total_naira }};
+    var contingency = {{ boq.contingency_percent }};
+    var final = grand + (grand * contingency / 100);
+    var el = document.getElementById('boq-final-total');
+    if (el) {
+        el.textContent = '₦' + final.toLocaleString('en-NG', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+})();
+</script>

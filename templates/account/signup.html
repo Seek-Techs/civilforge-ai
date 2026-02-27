@@ -1,0 +1,127 @@
+<!--
+  templates/account/signup.html
+  The registration page.
+
+  CONCEPT: {{ form.field.errors }}
+  Each form field can have errors. If a user submits an invalid email,
+  form.email.errors contains the error messages. We display them under
+  each field so the user knows exactly what to fix.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account — CivilForge AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a3c5e 0%, #0d2137 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 2rem 0;
+        }
+        .auth-card { border-radius: 16px; border: none; box-shadow: 0 8px 32px rgba(0,0,0,.35); }
+        .brand { color: #f4a228; font-weight: 700; font-size: 1.8rem; letter-spacing: 1px; }
+        .btn-primary-cf { background: #f4a228; border: none; color: #fff; font-weight: 600; padding: .65rem 2rem; }
+        .btn-primary-cf:hover { background: #d88c1a; color: #fff; }
+        .form-control:focus { border-color: #f4a228; box-shadow: 0 0 0 .2rem rgba(244,162,40,.25); }
+        .password-hint { font-size: .78rem; color: #888; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-sm-9 col-md-6 col-lg-5">
+            <div class="card auth-card p-4 p-md-5">
+
+                <div class="text-center mb-4">
+                    <div class="brand"><i class="bi bi-building-gear me-2"></i>CivilForge</div>
+                    <div class="text-muted small mt-1">Create your free account</div>
+                </div>
+
+                <form method="post" action="{% url 'account_signup' %}">
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <strong>Form errors:</strong>
+                        {% for field, errors in form.errors.items %}
+                            <div><b>{{ field }}:</b> {{ errors }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Email address <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input type="email" name="email"
+                                   class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                                   placeholder="you@example.com"
+                                   value="{{ form.email.value|default:'' }}"
+                                   autocomplete="email" autofocus>
+                        </div>
+                        {% for error in form.email.errors %}
+                        <div class="text-danger small mt-1"><i class="bi bi-x-circle me-1"></i>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Password -->
+                    <div class="mb-1">
+                        <label class="form-label fw-semibold">Password <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input type="password" name="password1"
+                                   class="form-control {% if form.password1.errors %}is-invalid{% endif %}"
+                                   placeholder="••••••••" autocomplete="new-password">
+                        </div>
+                        {% for error in form.password1.errors %}
+                        <div class="text-danger small mt-1"><i class="bi bi-x-circle me-1"></i>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Password hints -->
+                    <ul class="password-hint ps-3 mb-3">
+                        <li>At least 8 characters</li>
+                        <li>Cannot be entirely numeric</li>
+                    </ul>
+
+                    <!-- Confirm password -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Confirm password <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                            <input type="password" name="password2"
+                                   class="form-control {% if form.password2.errors %}is-invalid{% endif %}"
+                                   placeholder="••••••••" autocomplete="new-password">
+                        </div>
+                        {% for error in form.password2.errors %}
+                        <div class="text-danger small mt-1"><i class="bi bi-x-circle me-1"></i>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-cf w-100">
+                        <i class="bi bi-person-check me-1"></i>Create Account
+                    </button>
+
+                    <p class="text-muted small text-center mt-3 mb-0">
+                        By signing up you agree to use this platform responsibly.
+                    </p>
+                </form>
+
+                <hr class="my-4">
+
+                <div class="text-center small">
+                    Already have an account?
+                    <a href="{% url 'account_login' %}" class="fw-semibold" style="color:#f4a228">Sign in</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

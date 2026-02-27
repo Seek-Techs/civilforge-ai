@@ -1,0 +1,12 @@
+Hello,
+
+You're receiving this email because someone registered an account on CivilForge using this email address.
+
+To confirm your email and activate your account, copy and paste this link into your browser:
+
+{{ activate_url }}
+
+If you did not sign up for CivilForge, you can safely ignore this email.
+
+Thanks,
+The CivilForge Team

@@ -1,12 +1,64 @@
 {% extends "base.html" %}
 
+{% block title %}{{ form_title }} — CivilForge AI{% endblock %}
+
 {% block content %}
-<div class="container my-5">
-    <h2>Create New Project</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Save</button>
-    </form>
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header py-3" style="background:var(--cf-primary)">
+                <h4 class="mb-0 text-white fw-bold">
+                    <i class="bi bi-pencil-square me-2"></i>{{ form_title }}
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label fw-semibold">
+                            {{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}
+                        </label>
+                        {% if field.field.widget.input_type == 'textarea' or field.name == 'description' or field.name == 'notes' %}
+                            <textarea name="{{ field.html_name }}" id="{{ field.id_for_label }}"
+                                class="form-control {% if field.errors %}is-invalid{% endif %}"
+                                rows="4"
+                                placeholder="{{ field.field.help_text|default:'' }}"
+                            >{{ field.value|default:'' }}</textarea>
+                        {% elif field.name == 'status' %}
+                            <select name="{{ field.html_name }}" id="{{ field.id_for_label }}"
+                                class="form-select {% if field.errors %}is-invalid{% endif %}">
+                                {% for val, lbl in field.field.choices %}
+                                <option value="{{ val }}" {% if field.value == val %}selected{% endif %}>{{ lbl }}</option>
+                                {% endfor %}
+                            </select>
+                        {% else %}
+                            <input type="text" name="{{ field.html_name }}" id="{{ field.id_for_label }}"
+                                value="{{ field.value|default:'' }}"
+                                class="form-control {% if field.errors %}is-invalid{% endif %}"
+                                placeholder="{{ field.field.help_text|default:'' }}"
+                            >
+                        {% endif %}
+                        {% if field.errors %}
+                            <div class="invalid-feedback">{{ field.errors|join:", " }}</div>
+                        {% endif %}
+                        {% if field.help_text %}
+                            <div class="form-text text-muted">{{ field.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-cf">
+                            <i class="bi bi-check-lg me-1"></i>{{ submit_label }}
+                        </button>
+                        <a href="{% url 'projects:my_projects' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg me-1"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
